@@ -515,6 +515,12 @@ class CaseHandler(object):
         old_case = self.case_collection.find_one(
             {'_id': case_obj['_id']}
         )
+
+        # if case is updated and was archived or active - make it inactive
+        updated_status = old_case.get('status')
+        if old_case.get('status') in ['archived', 'active']:
+            updated_status = 'inactive'
+
         updated_case = self.case_collection.find_one_and_update(
             {'_id': case_obj['_id']},
             {
@@ -537,6 +543,8 @@ class CaseHandler(object):
                     'rank_model_version': case_obj.get('rank_model_version'),
                     'sv_rank_model_version': case_obj.get('sv_rank_model_version'),
                     'madeline_info': case_obj.get('madeline_info'),
+                    'chromograph_image_files': case_obj.get('chromograph_image_files'),
+                    'chromograph_prefixes': case_obj.get('chromograph_prefixes'),
                     'vcf_files': case_obj.get('vcf_files'),
                     'has_svvariants': case_obj.get('has_svvariants'),
                     'has_strvariants': case_obj.get('has_strvariants'),
@@ -544,7 +552,7 @@ class CaseHandler(object):
                     'research_requested': case_obj.get('research_requested', False),
                     'multiqc': case_obj.get('multiqc'),
                     'mme_submission': case_obj.get('mme_submission'),
-                    'status': old_case.get('status') if  old_case.get('status') != 'archived' else 'inactive'
+                    'status': updated_status
                 }
             },
             return_document=pymongo.ReturnDocument.AFTER

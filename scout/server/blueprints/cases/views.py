@@ -18,7 +18,7 @@ from flask_login import current_user
 from flask_weasyprint import HTML, render_pdf
 from werkzeug.datastructures import Headers
 from dateutil.parser import parse as parse_date
-from scout.constants import CLINVAR_HEADER, CASEDATA_HEADER, ACMG_MAP, ACMG_COMPLETE_MAP
+from scout.constants import (CLINVAR_HEADER, CASEDATA_HEADER, ACMG_MAP, ACMG_COMPLETE_MAP)
 from scout.server.extensions import store, mail
 from scout.server.utils import (templated, institute_and_case, user_institutes)
 from . import controllers
@@ -57,7 +57,6 @@ def cases(institute_id):
     all_cases = store.cases(collaborator=institute_id, name_query=query,
                         skip_assigned=skip_assigned, is_research=is_research)
 
-    LOG.info(type(all_cases))
     sort_by = request.args.get('sort')
     sort_order = request.args.get('order') or 'asc'
     if sort_by:
@@ -75,6 +74,7 @@ def cases(institute_id):
     data = controllers.cases(store, all_cases, limit)
     data['sort_order'] = sort_order
     data['sort_by'] = sort_by
+    data['nr_cases'] = store.nr_cases(institute_id=institute_id)
 
     sanger_unevaluated = controllers.get_sanger_unevaluated(store, institute_id, current_user.email)
     if len(sanger_unevaluated)> 0:
@@ -90,7 +90,7 @@ def case(institute_id, case_name):
     """Display one case."""
     institute_obj, case_obj = institute_and_case(store, institute_id, case_name)
     data = controllers.case(store, institute_obj, case_obj)
-    return dict(institute=institute_obj, case=case_obj, **data)
+    return dict(institute=institute_obj, case=case_obj, mme_nodes= current_app.mme_nodes, **data)
 
 
 @cases_bp.route('/<institute_id>/clinvar_submissions', methods=['GET','POST'])
@@ -689,7 +689,7 @@ def pin_variant(institute_id, case_name, variant_id):
     institute_obj, case_obj = institute_and_case(store, institute_id, case_name)
     variant_obj = store.variant(variant_id)
     user_obj = store.user(current_user.email)
-    link = url_for('variants.variant', institute_id=institute_id, case_name=case_name,
+    link = url_for('variant.variant', institute_id=institute_id, case_name=case_name,
                    variant_id=variant_id)
     if request.form['action'] == 'ADD':
         store.pin_variant(institute_obj, case_obj, user_obj, link, variant_obj)
@@ -705,7 +705,7 @@ def mark_validation(institute_id, case_name, variant_id):
     variant_obj = store.variant(variant_id)
     user_obj = store.user(current_user.email)
     validate_type = request.form['type'] or None
-    link = url_for('variants.variant', institute_id=institute_id, case_name=case_name,
+    link = url_for('variant.variant', institute_id=institute_id, case_name=case_name,
                    variant_id=variant_id)
     store.validate(institute_obj, case_obj, user_obj, link, variant_obj, validate_type)
     return redirect(request.referrer or link)
@@ -717,7 +717,7 @@ def mark_causative(institute_id, case_name, variant_id, partial_causative=False)
     institute_obj, case_obj = institute_and_case(store, institute_id, case_name)
     variant_obj = store.variant(variant_id)
     user_obj = store.user(current_user.email)
-    link = url_for('variants.variant', institute_id=institute_id, case_name=case_name,
+    link = url_for('variant.variant', institute_id=institute_id, case_name=case_name,
                    variant_id=variant_id)
     if request.form['action'] == 'ADD':
         if 'partial_causative' in request.form:
@@ -790,8 +790,9 @@ def share(institute_id, case_name):
 @cases_bp.route('/<institute_id>/<case_name>/rerun', methods=['POST'])
 def rerun(institute_id, case_name):
     """Request a case to be rerun."""
-    sender = current_app.config['MAIL_USERNAME']
-    recipient = current_app.config['TICKET_SYSTEM_EMAIL']
+    sender = current_app.config.get('MAIL_USERNAME')
+    recipient = current_app.config.get('TICKET_SYSTEM_EMAIL')
+
     controllers.rerun(store, mail, current_user, institute_id, case_name, sender,
                       recipient)
     return redirect(request.referrer)
@@ -862,3 +863,31 @@ def multiqc(institute_id, case_name):
     out_dir = os.path.abspath(os.path.dirname(data['case']['multiqc']))
     filename = os.path.basename(data['case']['multiqc'])
     return send_from_directory(out_dir, filename)
+
+
+@cases_bp.route('/<institute_id>/<case_name>/roh_images/<image>')
+def host_roh_image(institute_id, case_name, image):
+    """Generate ROH image file paths"""
+    return host_image_aux(institute_id, case_name, image, 'roh_images')
+
+
+@cases_bp.route('/<institute_id>/<case_name>/upd_images/<image>')
+def host_upd_image(institute_id, case_name, image):
+    """Generate UPD image file paths"""
+    return host_image_aux(institute_id, case_name, image, 'upd_images')
+
+
+@cases_bp.route('/<institute_id>/<case_name>/chr_images/<image>')
+def host_chr_image(institute_id, case_name, image):
+    """Generate CHR image file paths"""
+    return host_image_aux(institute_id, case_name, image, 'chr_images')
+
+
+def host_image_aux(institute_id, case_name, image, imgstr):
+    """Auxilary function for generate absolute file paths"""
+    institute_obj, case_obj = institute_and_case(store, institute_id, case_name)
+    chr_path = case_obj.get('chromograph_image_files')
+    abs_path = os.path.abspath(chr_path)
+    img_path = abs_path +"/" + imgstr
+    LOG.debug("Attempting to send {}/{}" .format(img_path, image))
+    return send_from_directory(img_path, image)

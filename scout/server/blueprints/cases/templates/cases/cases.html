@@ -32,7 +32,7 @@
       {{ search_form() }}
     </div>
     <div class="card-footer text-center">
-      Showing {{ limit if limit < found_cases else found_cases }} /  {{ found_cases }} cases
+      Showing {{ limit if limit < found_cases else found_cases }} /  {{ nr_cases }} cases
     </div>
   </div>
 
@@ -64,7 +64,7 @@
                   Case <strong><a href="{{ url_for('cases.case', institute_id=institute._id, case_name=case) }}" target="_blank">{{case}}</a></strong> ---> <strong>{{var_list|length}}</strong> variants:
                   <ul>
                     {% for var in var_list %}
-                      <li><a href="{{ url_for('variants.variant', institute_id=institute._id, case_name=case, variant_id=var) }}" target="_blank">{{var}}</a></li>
+                      <li><a href="{{ url_for('variant.variant', institute_id=institute._id, case_name=case, variant_id=var) }}" target="_blank">{{var}}</a></li>
                     {% endfor %}
                   </ul>
                 </li>
@@ -216,10 +216,12 @@
         <span class="badge badge-primary">migrated</span>
       {% endif %}
     </td>
-    <td>
+    <td class="d-flex justify-content-between align-items-center">
       {{ case.analysis_date.date() }}
-      {% if case.is_rerun %}
-        <span class="badge badge-secondary pull-right">rerun</span>
+      {% if case.rerun_requested %}
+          <span class="badge badge-secondary">rerun pending</span>
+      {% elif case.is_rerun %}
+        <span class="badge badge-secondary">rerun</span>
       {% endif %}
     </td>
     <td>
@@ -278,9 +280,9 @@
                   {% for varname, clinvar in case.clinvar_variants.items() %}
                     <li>
                     {% if clinvar.category == 'snv' %}
-                      <a href="{{ url_for('variants.variant', institute_id=case.owner, case_name=case.display_name, variant_id=clinvar.local_id) }}" target="_blank">chr{{clinvar.chromosome}}:{{clinvar.start}}_{{clinvar.ref}}>{{clinvar.alt}}</a>
+                      <a href="{{ url_for('variant.variant', institute_id=case.owner, case_name=case.display_name, variant_id=clinvar.local_id) }}" target="_blank">chr{{clinvar.chromosome}}:{{clinvar.start}}_{{clinvar.ref}}>{{clinvar.alt}}</a>
                     {% else %}
-                      <a href="{{ url_for('variants.sv_variant', institute_id=case.owner, case_name=case.display_name, variant_id=clinvar.local_id) }}" target="_blank">chr{{clinvar.chromosome}}:{{clinvar.breakpoint1}}_{{clinvar.var_type}}</a>
+                      <a href="{{ url_for('variant.sv_variant', institute_id=case.owner, case_name=case.display_name, variant_id=clinvar.local_id) }}" target="_blank">chr{{clinvar.chromosome}}:{{clinvar.breakpoint1}}_{{clinvar.var_type}}</a>
                     {% endif %}
                     </li>
                   {% endfor %}
