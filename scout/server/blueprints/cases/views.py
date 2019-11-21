@@ -48,7 +48,7 @@ def cases(institute_id):
     institute_obj = institute_and_case(store, institute_id)
     query = request.args.get('query')
 
-    limit = 100
+    limit = 500
     if request.args.get('limit'):
         limit = int(request.args.get('limit'))
 
