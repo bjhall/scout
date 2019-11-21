@@ -421,6 +421,10 @@
               CADD score
               <span><strong>{{ variant.cadd_score or '-' }}</strong></span>
             </td>
+	    <td>
+              QUAL
+              <span class="pull-right"><strong>{{ variant.quality|int or '-' }}</strong></span>
+            </td>	    
           </tr>
         </tbody>
       </table>
