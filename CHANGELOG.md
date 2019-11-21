@@ -6,18 +6,41 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 
 ## [x.x.x]
 
+### Added
+- Improved MatchMaker pages, including visible patient contacts email address
+- New badges for the github repo
+- Links to [GENEMANIA](genemania.org)
+- Sort gene panel list on case view.
+- More automatic tests
+
+### Fixed
+- Manual rank variant tags could be saved in a "Select a tag"-state, a problem in the variants view.
+- Same case evaluations are no longer shown as gray previous evaluations on the variants page
+- Stay on research pages, even if reset, next first buttons are pressed..
+- Overlapping variants will now be visible on variant page again
+- Fix missing classification comments and links in evaluations page
+
+
+## [4.8.3]
+
+### Added
+
+### Fixed
+- Bug when ordering sanger
+
+
 ## [4.8.2]
 
 ### Added
 
 ### Fixed
-
 - Avoid opening extra tab for coverage report
 - Fixed a problem when rank model version was saved as floats and not strings
 - Fixed a problem with displaying dismiss variant reasons on the general report
 - Disable load and delete filter buttons if there are no saved filters
 - Fix problem with missing verifications
 - Remove duplicate users and merge their data and activity
+
 
 ## [4.8.1]
 
