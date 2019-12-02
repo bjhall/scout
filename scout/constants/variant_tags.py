@@ -128,79 +128,75 @@ MANUAL_RANK_OPTIONS = {
 
 DISMISS_VARIANT_OPTIONS = {
     2: {
-        'label': 'Common public',
-        'description': 'Too common in public databases.',
-        'evidence': ['freq']
-        },
-    3: {
-        'label': 'Common local',
-        'description': 'Too common in local databases.',
-        'evidence': ['freq']
-        },
-    5: {
-        'label': 'Irrelevant phenotype',
-        'description': 'Phenotype not relevant.',
-        'evidence': ['OMIM']
-        },
-    7: {
-        'label': 'Inconsistent inheritance pattern',
-        'description': 'Inheritance pattern not relevant.',
-        'evidence': ['OMIM', 'GT', 'inheritance_model']
-        },
-    11: {
-        'label': 'No plausible compound',
-        'description': 'No plausible compound - AR disease.',
-        'evidence': ['Compounds']
-        },
-    13: {
-        'label': 'Not in disease transcript',
-        'description': 'Not in transcript relevant to disease.',
-        'evidence': ['transcript']
-        },
-    17: {
-        'label': 'Not in RefSeq transcript',
-        'description':
-            'Not in a RefSeq transcript - could not be determined relevant.',
-        'evidence': ['transcript']
-        },
-    19: {
-        'label': 'Splicing unaffected',
-        'description': 'Does not appear to affect splicing.',
-        'evidence': ['spidex']
-        },
-    23: {
-        'label': 'Inherited from unaffected',
-        'description': 'Inherited from an unaffected individual.',
-        'evidence': ['GT', 'pedigree']
-        },
-    29: {
-        'label': 'Technical issues',
-        'description': 'Technical issues - likely false positive.',
-        'evidence': ['GT', 'IGV']
-        },
-    31: {
-        'label': 'No protein function',
-        'description':
-        'Not likely to alter protein function - eg benign polyQ expansion.',
-        'evidence': ['CADD', 'conservation']
-        },
-    37: {
-        'label': 'Reputation benign',
-        'description': 'Reputable source classified benign.',
+        'label': '(F) B/LB ClinVar',
+        'description': '(F) B/LB ClinVar',
         'evidence': ['clinvar']
-        },
+    },
+    3: {
+        'label': '(F) Common gnomAD',
+        'description': '(F) Common gnomAD',
+        'evidence': ['freq']
+    },
+    5: {
+        'label': '(F) Non coding',
+        'description': '(F) Non coding',
+        'evidence': ['transcript']
+    },
+    7: {
+        'label': '(F) Probable artefact',
+        'description': '(F) Probable artefact',
+        'evidence': ['freq', 'GT', 'inheritance_model']
+    },
+    11: {
+        'label': '(F) Not in proband',
+        'description': '(F) Not in proband',
+        'evidence': ['GT']
+    },
+    13: {
+        'label': 'B/LB ClinVar',
+        'description': 'B/LB ClinVar',
+        'evidence': ['clinvar']
+    },
+    17: {
+        'label': 'Common gnomAD',
+        'description': 'Common gnomAD',
+        'evidence': ['freq']
+    },
+    19: {
+        'label': 'No plausible compound',
+        'description': 'No plausible compound',
+        'evidence': ['inheritance_model']
+    },
+    23: {
+        'label': 'Not annotated in OMIM',
+        'description': 'Not annotated in OMIM',
+        'evidence': ['OMIM']
+    },
+    29: {
+        'label': 'Predicted benign',
+        'description': 'Predicted benign',
+        'evidence': ['CADD']
+    },
+    31: {
+        'label': 'Inherited, unaffected parent',
+        'description':'Inherited, unaffected parent',
+        'evidence': ['inheritance_model']
+    },
+    37: {
+        'label': 'Irrelevant phenotype',
+        'description': 'Irrelevant phenotype',
+        'evidence': ['OMIM']
+    },
     41: {
-        'label': 'Common variation type',
-        'description':
-        'Found in a gene with much benign such (e.g. missense) variation.',
+        'label': 'PubMed, no relevant info',
+        'description':'PubMed, no relevant info',
         'evidence': ['type']
-        },
+    },
     43: {
-        'label': 'Unstudied variation type',
-        'description':
-        'In a gene where mainly other types of variation (e.g. repeat expansion) are established as pathologic.',
-        'evidence': ['type']
-        }
+        'label': 'Technical issues',
+        'description':'Technical issues',
+        'evidence': ['pileup','GT']
+    }
 }
 
 MOSAICISM_OPTIONS = {
