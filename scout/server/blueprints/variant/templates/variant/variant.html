@@ -1353,7 +1353,7 @@
       </span>
       <span>
         {% if not current_variant %}
-          <small>{{ data.case.display_name }}</small>
+          <small>{% if data.case.display_name %}{{ data.case.display_name }}{%else%}{{data.case_id}}{%endif%}</small>
         {% endif %}
       </span>
     </div>
