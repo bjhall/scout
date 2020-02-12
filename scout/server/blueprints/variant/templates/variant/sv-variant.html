@@ -124,6 +124,16 @@
               {{ variant.chromosome }}:{{ variant.position }} {{ "-" if variant.end_chrom == variant.chromosome else " / "+variant.end_chrom+":" }}{{ variant.end }}
             </div>
           </li>
+
+	  <li class="list-group-item">
+	    Copynumber profile
+	    <div class="float-right">
+              {% for sample in variant.samples %}
+	      <a class="btn btn-outline-secondary btn-sm" href="http://10.0.224.64/gens/{{sample.display_name}}?region={{variant.chromosome}}:{{variant.position-2000}}-{{variant.end+2000}}&hg_type=38" target="_blank">Gens ({{sample.display_name}})</a>
+	      {% endfor %}
+	    </div>
+	  </li>
+
           <li class="list-group-item">
             Breakpoint 1
             <div class="float-right">
@@ -137,7 +147,7 @@
               {% else %}
                 - BAM file(s) missing
               {% endif %}
-              - <a class="btn btn-outline-secondary btn-sm" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr{{ variant.chromosome }}:{{ variant.position }}&dgv=pack&knownGene=pack&omimGene=pack" target="_blank">UCSC</a>
+		- <a class="btn btn-outline-secondary btn-sm" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr{{ variant.chromosome }}:{{ variant.position }}&dgv=pack&knownGene=pack&omimGene=pack" target="_blank">UCSC</a>
             </div>
           </li>
           <li class="list-group-item">
