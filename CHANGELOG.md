@@ -21,6 +21,7 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 - Parse correctly variants with zero frequency values
 - Continue even if there are problems to create a region vcf
 - STR and cancer variant navigation back to variants pages could fail
+- Fix the link to Ensembl for SV variants when genome build 38.
 
 ### Changed
 - Improved code that sends requests to the external APIs
