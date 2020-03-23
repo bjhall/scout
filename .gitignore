@@ -40,7 +40,6 @@ pytest.ini
 *.sublime-*
 dev/
 .vagrant/
-.coverage*
 htmlcov/
 provision/roles/
 .env
@@ -65,8 +64,12 @@ _book/
 # Textmate
 .tm_properties
 
+# Linters
+pylintrc
+
 # Other
 /local
+scripts/local
 *sqlite
 
 # Emacs (Just so I don't have to see them green in Atom ;-)

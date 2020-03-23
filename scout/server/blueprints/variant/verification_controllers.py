@@ -2,21 +2,35 @@ import logging
 import urllib
 import subprocess
 from pprint import pprint as pp
+
 from flask import url_for
 from flask_login import current_user
 from flask_mail import Message
 
-from .controllers import variant as variant_controller
-
 from scout.server.extensions import mail as ex_mail
 
+from .controllers import variant as variant_controller
+
 LOG = logging.getLogger(__name__)
+
 
 class MissingVerificationRecipientError(Exception):
     pass
 
-def variant_verification(store, institute_id, case_name, variant_id, sender, 
-                         variant_url, order, comment, url_builder=None, mail=None, user_obj=None):
+
+def variant_verification(
+    store,
+    institute_id,
+    case_name,
+    variant_id,
+    sender,
+    variant_url,
+    order,
+    comment,
+    url_builder=None,
+    mail=None,
+    user_obj=None,
+):
     """Sand a verification email and register the verification in the database
 
         Args:
@@ -63,16 +77,24 @@ def variant_verification(store, institute_id, case_name, variant_id, sender,
     url_builder = url_builder or url_for
     mail = mail or ex_mail
     user_obj = user_obj or store.user(current_user.email)
-    
-    data = variant_controller(store, institute_id, case_name, variant_id=variant_id, add_case=True,
-            add_other=False, get_overlapping=False, add_compounds=False)
-    variant_obj = data['variant']
-    case_obj = data['case']
-    institute_obj = data['institute']
+
+    data = variant_controller(
+        store,
+        institute_id,
+        case_name,
+        variant_id=variant_id,
+        add_case=True,
+        add_other=False,
+        get_overlapping=False,
+        add_compounds=False,
+    )
+    variant_obj = data["variant"]
+    case_obj = data["case"]
+    institute_obj = data["institute"]
     pp(variant_obj)
-    recipients = institute_obj['sanger_recipients']
+    recipients = institute_obj["sanger_recipients"]
     if len(recipients) == 0:
-        raise MissingSangerRecipientError()
+        raise MissingVerificationRecipientError()
 
     view_type = None
     email_subject = None
@@ -93,43 +115,56 @@ def variant_verification(store, institute_id, case_name, variant_id, sender,
     gene_identifiers = [str(ident) for ident in variant_obj.get('hgnc_symbols', 
                         variant_obj.get('hgnc_ids',[]))]
     hgnc_symbol = ', '.join(gene_identifiers)
+
     email_subj_gene_symbol = None
     if len(gene_identifiers) > 3:
-        email_subj_gene_symbol = ' '.join([ str(len(gene_identifiers)) + 'genes'])
+        email_subj_gene_symbol = " ".join([str(len(gene_identifiers)) + "genes"])
     else:
         email_subj_gene_symbol = hgnc_symbol
 
-    gtcalls = ["<li>{}: {}</li>".format(sample_obj['display_name'], sample_obj['genotype_call'])
-               for sample_obj in variant_obj['samples']]
+    gtcalls = [
+        "<li>{}: {}</li>".format(
+            sample_obj["display_name"], sample_obj["genotype_call"]
+        )
+        for sample_obj in variant_obj["samples"]
+    ]
     tx_changes = []
 
-    if category == 'snv': #SNV
-        view_type = 'variant.variant'
+    if category == "snv":  # SNV
+        view_type = "variant.variant"
         tx_changes = []
 
-        for gene_obj in variant_obj.get('genes', []):
-            for tx_obj in gene_obj['transcripts']:
+        for gene_obj in variant_obj.get("genes", []):
+            for tx_obj in gene_obj["transcripts"]:
                 # select refseq transcripts as "primary"
-                if not tx_obj.get('refseq_id'):
+                if not tx_obj.get("refseq_id"):
                     continue
 
-                for refseq_id in tx_obj.get('refseq_identifiers'):
+                for refseq_id in tx_obj.get("refseq_identifiers"):
                     transcript_line = []
-                    transcript_line.append(gene_obj.get('hgnc_symbol', gene_obj['hgnc_id']))
-                    
-                    transcript_line.append('-'.join([refseq_id, tx_obj['transcript_id']]))
+                    transcript_line.append(
+                        gene_obj.get("hgnc_symbol", gene_obj["hgnc_id"])
+                    )
+
+                    transcript_line.append(
+                        "-".join([refseq_id, tx_obj["transcript_id"]])
+                    )
                     if "exon" in tx_obj:
-                        transcript_line.append(''.join([ "exon", tx_obj["exon"]]))
+                        transcript_line.append("".join(["exon", tx_obj["exon"]]))
                     elif "intron" in tx_obj:
-                        transcript_line.append(''.join([ "intron", tx_obj["intron"]]))
+                        transcript_line.append("".join(["intron", tx_obj["intron"]]))
                     else:
-                        transcript_line.append('intergenic')
+                        transcript_line.append("intergenic")
                     if "coding_sequence_name" in tx_obj:
-                        transcript_line.append(urllib.parse.unquote(tx_obj['coding_sequence_name']))
+                        transcript_line.append(
+                            urllib.parse.unquote(tx_obj["coding_sequence_name"])
+                        )
                     else:
-                        transcript_line.append('')
+                        transcript_line.append("")
                     if "protein_sequence_name" in tx_obj:
-                        transcript_line.append(urllib.parse.unquote(tx_obj['protein_sequence_name']))
+                        transcript_line.append(
+                            urllib.parse.unquote(tx_obj["protein_sequence_name"])
+                        )
                     else:
                         transcript_line.append('')
                     if "strand" in tx_obj:
@@ -141,11 +176,11 @@ def variant_verification(store, institute_id, case_name, variant_id, sender,
                     else:
                         transcript_line.append('')
 
-                    tx_changes.append("<li>{}</li>".format(':'.join(transcript_line)))
+                    tx_changes.append("<li>{}</li>".format(":".join(transcript_line)))
 
-    else: #SV
-        view_type = 'variant.sv_variant'
-        display_name = '_'.join([breakpoint_1, variant_obj.get('sub_category').upper()])
+    else:  # SV
+        view_type = "variant.sv_variant"
+        display_name = "_".join([breakpoint_1, variant_obj.get("sub_category").upper()])
 
     # body of the email
     html = verification_email_body(
@@ -168,25 +203,54 @@ def variant_verification(store, institute_id, case_name, variant_id, sender,
     )
 
     # build a local the link to the variant to be included in the events objects (variant and case) created in the event collection.
-    local_link = url_builder(view_type, institute_id=institute_obj['_id'],
-                           case_name=case_obj['display_name'],
-                           variant_id=variant_obj['_id'])
+    local_link = url_builder(
+        view_type,
+        institute_id=institute_obj["_id"],
+        case_name=case_obj["display_name"],
+        variant_id=variant_obj["_id"],
+    )
 
-    if order == 'True': # variant verification should be ordered
+    if order == "True":  # variant verification should be ordered
         # pin variant if it's not already pinned
-        if case_obj.get('suspects') is None or variant_obj['_id'] not in case_obj['suspects']:
-            store.pin_variant(institute_obj, case_obj, user_obj, local_link, variant_obj)
+        if (
+            case_obj.get("suspects") is None
+            or variant_obj["_id"] not in case_obj["suspects"]
+        ):
+            store.pin_variant(
+                institute_obj, case_obj, user_obj, local_link, variant_obj
+            )
 
-        email_subject = "SCOUT: validation of {} variant {}, ({})".format( category.upper(), display_name, email_subj_gene_symbol)
-        store.order_verification(institute=institute_obj, case=case_obj, user=user_obj, link=local_link, variant=variant_obj)
+        email_subject = "SCOUT: validation of {} variant {}, ({})".format(
+            category.upper(), display_name, email_subj_gene_symbol
+        )
+        store.order_verification(
+            institute=institute_obj,
+            case=case_obj,
+            user=user_obj,
+            link=local_link,
+            variant=variant_obj,
+        )
 
-    else: # variant verification should be cancelled
-        email_subject = "SCOUT: validation of {} variant {}, ({}), was CANCELLED!".format(category.upper(), display_name, email_subj_gene_symbol)
-        store.cancel_verification(institute=institute_obj, case=case_obj, user=user_obj, link=local_link, variant=variant_obj)
+    else:  # variant verification should be cancelled
+        email_subject = "SCOUT: validation of {} variant {}, ({}), was CANCELLED!".format(
+            category.upper(), display_name, email_subj_gene_symbol
+        )
+        store.cancel_verification(
+            institute=institute_obj,
+            case=case_obj,
+            user=user_obj,
+            link=local_link,
+            variant=variant_obj,
+        )
 
-    kwargs = dict(subject=email_subject, html=html, sender=sender, recipients=recipients,
+    kwargs = dict(
+        subject=email_subject,
+        html=html,
+        sender=sender,
+        recipients=recipients,
         # cc the sender of the email for confirmation
-        cc=[user_obj['email']])
+        cc=[user_obj["email"]],
+    )
 
     message = Message(**kwargs)
     # send email using flask_mail
@@ -255,6 +319,5 @@ def verification_email_body(case_name, url, display_name, category, subcategory,
         ncbi=ncbi,
         thermo=thermo
     )
-
 
     return html

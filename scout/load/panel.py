@@ -5,21 +5,18 @@ functions to load panels into the database
 """
 
 import logging
-import json
 
-from pprint import pprint as pp
-
+from scout.parse.panel import (get_panel_info, parse_gene_panel,
+                               parse_panel_app_panel)
 from scout.utils.handle import get_file_handle
-from scout.parse.panel import (get_panel_info, parse_panel_app_panel, parse_gene_panel)
-from scout.utils.requests import get_request
+from scout.utils.scout_requests import fetch_resource
 
 LOG = logging.getLogger(__name__)
 
 
-def load_panel(panel_path, adapter, date=None, display_name=None, version=None, panel_type=None, 
-               panel_id=None, institute=None):
+def load_panel(panel_path, adapter, **kwargs):
     """Load a manually curated gene panel into scout
-    
+
     Args:
         panel_path(str): path to gene panel file
         adapter(scout.adapter.MongoAdapter)
@@ -29,120 +26,111 @@ def load_panel(panel_path, adapter, date=None, display_name=None, version=None, 
         panel_type(str)
         panel_id(str)
         institute(str)
-    
+
     """
     panel_lines = get_file_handle(panel_path)
-
+    version = kwargs.get("version")
     try:
         # This will parse panel metadata if includeed in panel file
         panel_info = get_panel_info(
             panel_lines=panel_lines,
-            panel_id=panel_id,
-            institute=institute,
+            panel_id=kwargs.get("panel_id"),
+            institute=kwargs.get("institute"),
             version=version,
-            date=date,
-            display_name=display_name
-            )
+            date=kwargs.get("date"),
+            display_name=kwargs.get("display_name"),
+        )
     except Exception as err:
         raise err
 
-    version = None
-    if panel_info.get('version'):
-        version = float(panel_info['version'])
+    if panel_info.get("version"):
+        version = float(panel_info["version"])
 
-    panel_id = panel_info['panel_id']
-    display_name = panel_info['display_name'] or panel_id
-    institute = panel_info['institute']
-    date = panel_info['date']
+    panel_id = panel_info["panel_id"]
+    display_name = panel_info["display_name"] or panel_id
+    institute = panel_info["institute"]
+    date = panel_info["date"]
 
     if not institute:
         raise SyntaxError("A Panel has to belong to a institute")
 
-    #Check if institute exists in database
+    # Check if institute exists in database
     if not adapter.institute(institute):
         raise SyntaxError("Institute {0} does not exist in database".format(institute))
 
     if not panel_id:
         raise SyntaxError("A Panel has to have a panel id")
-    
+
     if version:
         existing_panel = adapter.gene_panel(panel_id, version)
     else:
-        ## Assuming version 1.0
+        # Assuming version 1.0
         existing_panel = adapter.gene_panel(panel_id)
         version = 1.0
         LOG.info("Set version to %s", version)
 
     if existing_panel:
         LOG.info("found existing panel")
-        if version == existing_panel['version']:
+        if version == existing_panel["version"]:
             LOG.warning("Panel with same version exists in database")
             LOG.info("Reload with updated version")
             raise SyntaxError()
-        display_name = display_name or existing_panel['display_name']
-        institute = institute or existing_panel['institute']
-    
+        display_name = display_name or existing_panel["display_name"]
+        institute = institute or existing_panel["institute"]
+
     parsed_panel = parse_gene_panel(
         path=panel_path,
         institute=institute,
-        panel_type=panel_type,
+        panel_type=kwargs.get("panel_type"),
         date=date,
         version=version,
         panel_id=panel_id,
         display_name=display_name,
     )
-    
+
     try:
         adapter.load_panel(parsed_panel=parsed_panel)
     except Exception as err:
         raise err
 
-def load_panel_app(adapter, panel_id=None, institute='cust000'):
+
+def load_panel_app(adapter, panel_id=None, institute="cust000"):
     """Load PanelApp panels into scout database
-    
-    If no panel_id load all PanelApp panels 
-    
+
+    If no panel_id load all PanelApp panels
+
     Args:
         adapter(scout.adapter.MongoAdapter)
         panel_id(str): The panel app panel id
     """
-    base_url = 'https://panelapp.genomicsengland.co.uk/WebServices/{0}/'
-    
+    base_url = "https://panelapp.genomicsengland.co.uk/WebServices/{0}/"
+
     hgnc_map = adapter.genes_by_alias()
-    
-    if panel_id:
-        panel_ids = [panel_id]
+
+    panel_ids = [panel_id]
 
     if not panel_id:
-        
+
         LOG.info("Fetching all panel app panels")
-        data = get_request(base_url.format('list_panels'))
-    
-        json_lines = json.loads(data)
-        
-        panel_ids = [panel_info['Panel_Id'] for panel_info in json_lines['result']]
-    
-    for panel_id in panel_ids:
-        panel_data = get_request(base_url.format('get_panel') + panel_id)
-        
+        json_lines = fetch_resource(base_url.format("list_panels"), json=True)
+
+        panel_ids = [panel_info["Panel_Id"] for panel_info in json_lines["result"]]
+
+    for _panel_id in panel_ids:
+        json_lines = fetch_resource(base_url.format("get_panel") + _panel_id, json=True)
+
         parsed_panel = parse_panel_app_panel(
-            panel_info = json.loads(panel_data)['result'], 
-            hgnc_map=hgnc_map,
-            institute=institute
+            panel_info=json_lines["result"], hgnc_map=hgnc_map, institute=institute,
         )
-        parsed_panel['panel_id'] = panel_id
-        
-        if len(parsed_panel['genes']) == 0:
-            LOG.warning("Panel {} is missing genes. Skipping.".format(parsed_panel['display_name']))
+        parsed_panel["panel_id"] = _panel_id
+
+        if len(parsed_panel["genes"]) == 0:
+            LOG.warning(
+                "Panel %s is missing genes. Skipping.", parsed_panel["display_name"]
+            )
             continue
-        
+
         try:
             adapter.load_panel(parsed_panel=parsed_panel)
         except Exception as err:
             raise err
-
-        
-        
-    
-    
-    
