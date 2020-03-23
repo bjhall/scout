@@ -191,12 +191,14 @@
           </div>
         </li>
         <li class="list-group-item">
-          Copy number profile
-          <div class="float-right">
-            {% for sample in variant.samples %}
-            <a class="btn btn-outline-secondary btn-sm" href="http://10.0.224.64/gens/{{sample.display_name}}?region={{variant.chromosome}}:{{variant.position-2000}}-{{variant.end+2000}}&hg_type=38" target="_blank">Gens ({{sample.display_name}})</a>
-            {% endfor %}
-          </div>
+	  <div class="row d-flex justify-content-between">
+            <div>Copy number profile</div>
+            <div>
+              {% for sample in variant.samples %}
+                <a class="btn btn-outline-secondary btn-sm" href="http://10.0.224.64/gens/{{sample.display_name}}?region={{variant.chromosome}}:{{variant.position-2000}}-{{variant.end+2000}}&hg_type=38" target="_blank">Gens ({{sample.display_name}})</a>
+              {% endfor %}
+            </div>
+	  </div>
         </li>	
         <li class="list-group-item">
           <div class="row d-flex justify-content-between">
