@@ -299,6 +299,9 @@ def observations(store, loqusdb, case_obj, variant_obj):
             continue
         document_id = parse_document_id(chrom, str(pos), ref, alt, var_type, case_id)
         other_variant = store.variant(document_id=document_id)
+        # If the other variant is not loaded we skip it
+        if not other_variant:
+            continue
         obs_data["cases"].append(dict(case=other_case, variant=other_variant))
 
     return obs_data

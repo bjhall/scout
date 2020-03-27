@@ -16,6 +16,7 @@ from pymongo.errors import BulkWriteError, DuplicateKeyError
 from scout.build import build_variant
 from scout.exceptions import IntegrityError
 from scout.parse.variant import parse_variant
+
 # Local modules
 from scout.parse.variant.rank_score import parse_rank_score
 from scout.utils.coordinates import is_par
@@ -258,25 +259,27 @@ class VariantHandler(VariantLoader):
             query["_id"] = document_id
 
         variant_obj = self.variant_collection.find_one(query)
+        if not variant_obj:
+            return variant_obj
         case_obj = self.case(case_id=variant_obj["case_id"])
 
-        if variant_obj:
-            if case_obj:
-                variant_obj = self.add_gene_info(
-                    variant_obj=variant_obj,
-                    gene_panels=gene_panels,
-                    build=case_obj["genome_build"],
-                )
-            else:
-                variant_obj = self.add_gene_info(
-                    variant_obj=variant_obj, gene_panels=gene_panels
-                )
+        if case_obj:
+            variant_obj = self.add_gene_info(
+                variant_obj=variant_obj,
+                gene_panels=gene_panels,
+                build=case_obj["genome_build"],
+            )
+        else:
+            variant_obj = self.add_gene_info(
+                variant_obj=variant_obj, gene_panels=gene_panels
+            )
 
-            if variant_obj["chromosome"] in ["X", "Y"]:
-                ## TODO add the build here
-                variant_obj["is_par"] = is_par(
-                    variant_obj["chromosome"], variant_obj["position"]
-                )
+        if variant_obj["chromosome"] in ["X", "Y"]:
+            # TODO add the build here
+            variant_obj["is_par"] = is_par(
+                variant_obj["chromosome"], variant_obj["position"]
+            )
+
         return variant_obj
 
     def gene_variants(

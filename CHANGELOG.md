@@ -7,6 +7,20 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 ## [x.x.x]
 
 ### Added
+### Fixed
+- Fix the link to Ensembl for SV variants when genome build 38.
+
+### Changed
+- Runs all CI checks in github actions
+
+## [4.14.1]
+
+### Fixed
+- Error when variant found in loqusdb is not loaded for other case
+
+## [4.14]
+
+### Added
 - Use github actions to run tests
 - Adds CLI command to update individual alignments path
 - Update HPO terms using downloaded definitions files
@@ -21,7 +35,6 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 - Parse correctly variants with zero frequency values
 - Continue even if there are problems to create a region vcf
 - STR and cancer variant navigation back to variants pages could fail
-- Fix the link to Ensembl for SV variants when genome build 38.
 
 ### Changed
 - Improved code that sends requests to the external APIs
