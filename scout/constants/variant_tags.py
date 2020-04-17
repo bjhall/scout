@@ -98,10 +98,10 @@ CANCER_TIER_OPTIONS = {
 }
 
 MANUAL_RANK_OPTIONS = {
-    8: {
-        "label": "Known pathogenic",
-        "description": "Previously known pathogenic in Clinvar Hgmd literature etc",
-    },
+#    8: {
+#        "label": "Known pathogenic",
+#        "description": "Previously known pathogenic in Clinvar Hgmd literature etc",
+#    },
     7: {
         "label": "Pathogenic",
         "description": (
@@ -109,31 +109,31 @@ MANUAL_RANK_OPTIONS = {
             "no further experimental validation needed"
         ),
     },
-    6: {
-        "label": "Novel validated pathogenic",
-        "description": "Novel mutation and validated experimentally",
-    },
-    5: {
-        "label": "Pathogenic partial phenotype",
-        "description": (
-            "Pathogenic variant explains part of patients phenotype, but "
-            "not all symptoms"
-        ),
-    },
+#    6: {
+#        "label": "Novel validated pathogenic",
+#        "description": "Novel mutation and validated experimentally",
+#    },
+#    5: {
+#        "label": "Pathogenic partial phenotype",
+#        "description": (
+#            "Pathogenic variant explains part of patients phenotype, but "
+#            "not all symptoms"
+#        ),
+#    },
     4: {
         "label": "Likely pathogenic",
         "description": "Experimental validation required to prove causality",
     },
     3: {
-        "label": "Possibly pathogenic",
-        "description": "Uncertain significance, but cannot disregard yet",
+        "label": "Variant of unknown significance",
+        "description": "Uncertain significance",
     },
     2: {
         "label": "Likely benign",
         "description": "Uncertain significance, but can discard",
     },
     1: {"label": "Benign", "description": "Does not cause phenotype"},
-    0: {"label": "Other", "description": "Phenotype not related to disease"},
+#    0: {"label": "Other", "description": "Phenotype not related to disease"},
 }
 
 DISMISS_VARIANT_OPTIONS = {
