@@ -61,6 +61,13 @@ def test_parse_case_owner(scout_config):
     # THEN the case should have a owner
     assert case_data["owner"] == scout_config["owner"]
 
+def test_parse_case_limsid(scout_config):
+    # GIVEN you load sample information from a scout config
+    # WHEN case is parsed
+    case_data = parse_case(scout_config)
+    # THEN the case should have the same limd_id as the config
+    assert case_data["lims_id"] == scout_config["lims_id"]
+
 
 def test_parse_case(scout_config):
     # GIVEN you load sample information from a scout config
